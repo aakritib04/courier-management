@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Courier Management Company</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="{{ url_for('static', filename='home.js') }}"></script>
+    <!-- Add Bootstrap CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-md-6">
+                <h1>Welcome to our Courier Management Company</h1>
+                <p>Your reliable partner for parcel delivery. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque auctor magna eu sem pulvinar.</p>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h2>Login</h2>
+                        <form id="login">
+                            <div class="form-group">
+                                <label>I am a :</label>
+                                <div class="form-check form-check-inline">
+                                    <input type="radio" class="form-check-input" id="manager" name="loginType" value="manager">
+                                    <label class="form-check-label" for="manager">Manager</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input type="radio" class="form-check-input" id="staff" name="loginType" value="staff">
+                                    <label class="form-check-label" for="staff">Staff</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input type="radio" class="form-check-input" id="customer" name="loginType" value="customer">
+                                    <label class="form-check-label" for="customer">Customer</label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="username">Username</label>
+                                <input type="text" class="form-control" id="username" name="username" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="password">Password</label>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">Login</button>
+                        </form>
+                        <hr>
+                        <p>Don't have an account? <a href="#signup" data-toggle="collapse" role="button" aria-expanded="false" aria-controls="signup">Sign up</a></p>
+                        <div class="collapse" id="signup">
+                            <h2>Sign Up</h2>
+                            <form id="signup">
+                                <div class="form-group">
+                                    <label>I am a:</label>
+                                    <div class="form-check form-check-inline">
+                                        <input type="radio" class="form-check-input" id="signupManager" name="signupType" value="manager">
+                                        <label class="form-check-label" for="signupManager">Manager</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input type="radio" class="form-check-input" id="signupStaff" name="signupType" value="staff">
+                                        <label class="form-check-label" for="signupStaff">Staff</label>
+                                    </div>
+                                    <div class="form-check form-check-inline ">
+                                        <input type="radio" class="form-check-input" id="signupCustomer" name="signupType" value="customer">
+                                        <label class="form-check-label" for="signupCustomer">Customer</label>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="signupUsername">Username</label>
+                                    <input type="text" class="form-control" id="signupUsername" name="signupUsername" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="signupPassword">Password</label>
+                                    <input type="password" class="form-control" id="signupPassword" name="signupPassword" required>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-success">Sign Up</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Bootstrap JS and jQuery -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
