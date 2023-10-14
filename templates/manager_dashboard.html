@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Courier Management Company</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+   <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+</head>
+  <style>
+    body {
+      padding:20px;
+    }
+  </style>
+  <body>
+    <h1>Welcome to the CMC Services</h1>
+    <p>MANAGER:: {{uid}}</p>
+    <h2>Orders and Status</h2>
+    <table id="ordersTable" class="display" style="width:100%">
+        <thead>
+            <tr>
+                <th>Order ID</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Table will be populated dynamically -->
+        </tbody>
+    </table>
+
+    <h2>Customers</h2>
+    <table id="customersTable" class="display" style="width:100%">
+        <thead>
+            <tr>
+                <th>Full Name</th>
+                <th>Email</th>
+                <th>Phone number</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Table will be populated dynamically -->
+        </tbody>
+    </table>
+
+    <h2>Staff Members</h2>
+    <table id="staffTable" class="display" style="width:100%">
+        <thead>
+            <tr>
+                <th>Staff Name</th>
+                <th>Email</th>
+                <th>Position</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Table will be populated dynamically -->
+        </tbody>
+    </table>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+
+    <script>
+      $(document).ready(function () {
+          // Sample JSON data with correct structure
+          const ordersData = [
+              { "Order ID": 1, "Status": 'Processing' },
+              { "Order ID": 2, "Status": 'Shipped' },
+              // Add more orders data
+          ];
+          var customersData;
+          var staffData;
+          $.ajax({
+              url: '/api/getAllCustomer',
+              type: 'GET',
+              async: false,
+              success: function(response) {
+                  // Handle the response from the server
+                console.log("Signup successful. Response:", response);
+                console.log(JSON.stringify(response))
+                customersData = JSON.parse(response)
+
+              },
+              error: function(xhr, textStatus, errorThrown) {
+                  // Handle errors from the API
+                  console.error("Error:", errorThrown);
+                  alert("Signup failed. Please try again.");
+              }
+          });
+
+        $.ajax({
+            url: '/api/getAllStaff',
+            type: 'GET',
+            async: false,
+            success: function(response) {
+                // Handle the response from the server
+              console.log("Signup successful. Response:", response);
+              console.log(JSON.stringify(response))
+                staffData = JSON.parse(response)
+
+            },
+            error: function(xhr, textStatus, errorThrown) {
+                // Handle errors from the API
+                console.error("Error:", errorThrown);
+                alert("Signup failed. Please try again.");
+            }
+        });
+
+        console.log('data')
+          console.log(customersData)
+          // const staffData = [
+          //     { "Staff ID": 1, "Name": 'Alice', "Position": 'Manager', "Email": 'alice@example.com' },
+          //     { "Staff ID": 2, "Name": 'Bob', "Position": 'Clerk', "Email": 'bob@example.com' },
+          //     // Add more staff data
+          // ];
+
+          // Initialize DataTables and populate with data
+          const ordersTable = $('#ordersTable').DataTable({ data: ordersData, columns: [{ data: "Order ID" }, { data: "Status" }] });
+          // customersData = [{"fullname": "Aakriti Bhardwaj", "email": "aakriti@gmail.com", "phone_num": 1234567890}]
+          const customersTable = $('#customersTable').DataTable({ data: customersData, columns: [{ data: "fullname" }, { data: "email" }, { data: "phone_num" }] });
+          const staffTable = $('#staffTable').DataTable({ data: staffData, columns: [{ data: "Staffname" }, { data: "email" }, { data: "role" }] });
+      });
+    </script>
+  </body>
+  </html>
+</html>

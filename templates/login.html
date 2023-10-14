@@ -1,21 +1,51 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
+  <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Courier Management Company</title>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="{{ url_for('static', filename='signup.js') }}"></script>
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-  
+   <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-   TEST LOGIN PAGE
-   LOGIN TYPE: {{login_type}}
-    UID: {{uid}}
+    <h1>Welcome to the Signup Page</h1>
 
-    <!-- Add Bootstrap JS and jQuery -->
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <form id="signupForm">
+        TEST LOGIN PAGE
+         LOGIN TYPE: {{loginType}}
+          UID: {{uid}}
+
+      {% if loginType == 'customer' %}
+        <div id="customerFields" >
+            <label for="firstName">First Name:</label>
+            <input type="text" id="firstName" name="firstName">
+            <br>
+            <label for="lastName">Last Name:</label>
+            <input type="text" id="lastName" name="lastName">
+            <br>
+            <label for="phoneNum">Phone Number:</label>
+            <input type="text" id="phoneNum" name="phoneNum">
+        </div>
+      {% endif %}
+      {% if loginType == 'staff' %}
+        <div id="staffFields" >
+            <label for="staffName">Staff Name:</label>
+            <input type="text" id="staffName" name="staffName">
+            <br>
+            <label for="role">Role:</label>
+            <input type="text" id="role" name="role">
+        </div>
+      {% endif %}
+      {% if loginType == 'manager' %}
+        <div id="managerFields" >
+            <label for="managerName">Manager Name:</label>
+            <input type="text" id="managerName" name="managerName">
+        </div>
+      {% endif %}
+        <button type="submit">Submit</button>
+    </form>
+
+    <!-- <script src="{{ url_for('static', filename='main.js') }}"></script> -->
 </body>
+
 </html>

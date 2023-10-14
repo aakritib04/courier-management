@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect, url_for
 from database import engine
 from sqlalchemy import text
 import json
@@ -14,16 +14,21 @@ def hello_world():
   return render_template('home.html')
 
 
-@app.route('/signup', methods=['POST'])
-def signup():
+@app.route("/test")
+def hello_TEST():
+  # return "<p>Hello, Aakriti!</p>"
+  return render_template('signup.html', uid=10, signupType='aakriti')
+
+
+@app.route('/signup', methods=['GET', 'POST'])
+def sign_up():
   data = request.json
   username = data.get('username')
   email = data.get('email')
   password = data.get('password')
-  login_type = data.get('loginType')
+  signupType = data.get('signupType')
 
-  print(f"username: {username}, password:{password}, login_type: {login_type}")
-  # key = Fernet.generate_key()
+  print(f"username: {username}, password:{password}, signupType: {signupType}")
   key = 'dpnNtPQldosc53zrQZeT4zN10NVkMysyrfXao_REllo='
   fernet = Fernet(key)
   encpass = fernet.encrypt(password.encode()).decode("utf-8")
@@ -36,19 +41,59 @@ def signup():
             f"SELECT * FROM sql6638399.User where uname='{username}' or email = '{email}';"
         ))
     if result.all():
+      print("IN IF ...GOT SAME MATCH")
       return jsonify(
           {'message': 'Signup failed. Username or Email already exists.'}), 401
     else:
       result = conn.execute(text(f"SELECT MAX(UID) FROM sql6638399.User;"))
       UID = result.all()[0][0]
-      uid = UID + 1
+      if UID:
+        uid = UID + 1
+      else:
+        uid = 1
       conn.execute(
           text(
-              f"INSERT INTO `sql6638399`.`User`(`UID`,`uname`,`user_type`,`email`,`password`) VALUES ({uid},'{username}','{login_type}','{email}','{encpass}');"
+              f"INSERT INTO `sql6638399`.`User`(`UID`,`uname`,`user_type`,`email`,`password`) VALUES ({uid},'{username}','{signupType}','{email}','{encpass}');"
           ))
       conn.commit()
+      return jsonify({
+          'message': 'Signup Succesful.',
+          "uid": uid,
+          "signupType": signupType
+      }), 200
 
-      return render_template('signup.html', login_type=login_type, uid=uid)
+
+@app.route('/register/<signupType>/<uid>')
+def register(signupType, uid):
+  print("in register")
+  return render_template('signup.html', signupType=signupType, uid=uid)
+
+
+@app.route('/signup_user/<signupType>/<uid>', methods=['GET', 'POST'])
+def sign_up_user(signupType, uid):
+  data = request.json
+  print(data)
+  if signupType == 'staff':
+    staffName = data.get('staffName')
+    role = data.get('role')
+    query = f"INSERT INTO `sql6638399`.`Staff`(`UID`,`sname`, `role`) VALUES  ({uid},   '{staffName}',  '{role}');"
+  elif signupType == 'customer':
+    firstName = data.get('firstName')
+    lastName = data.get('lastName')
+    phoneNum = data.get('phoneNum')
+    query = f"INSERT INTO `sql6638399`.`Customer`(`UID`,`firstname`,`lastname`,`phone_num`) VALUES({uid},'{firstName}','{lastName}',{phoneNum});"
+  elif signupType == 'manager':
+    mname = data.get('managerName')
+    query = f"INSERT INTO `sql6638399`.`Manager`(`UID`,`mname`) VALUES({uid},'{mname}');"
+  with engine.connect() as conn:
+    conn.execute(text(query))
+    conn.commit()
+
+    return jsonify({
+        'message': 'Details Signup Succesful.',
+        "uid": uid,
+        "signupType": signupType
+    }), 200
 
 
 @app.route('/login', methods=['POST'])
@@ -59,23 +104,37 @@ def login():
   login_type = data.get('loginType')
 
   print(f"username: {username}, password:{password}, login_type: {login_type}")
-  # key = Fernet.generate_key()
   key = 'dpnNtPQldosc53zrQZeT4zN10NVkMysyrfXao_REllo='
-  # print(f"key: {key}")
   fernet = Fernet(key)
-  # encpass = fernet.encrypt(password.encode()).decode("utf-8")
-  # print("original string: ", password)
-  # print("encrypted string: ", encpass)
   with engine.connect() as conn:
     query = f"SELECT * FROM sql6638399.User where uname='{username}';"
     print(f"query: {query}")
     result = conn.execute(text(query))
     res = result.all()
     print(f"res: {res}")
-  if len(res) == 1 and password == fernet.decrypt(res[0][4]).decode("utf-8"):
-    return render_template('login.html', login_type=login_type, uid=res[0][0])
+  if len(res) == 1 and password == fernet.decrypt(
+      res[0][4]).decode("utf-8") and login_type == res[0][2]:
+    return jsonify({
+        'message': 'Login Succesful.',
+        "uid": res[0][0],
+        "loginType": res[0][2]
+    }), 200
   else:
     return jsonify({'message': 'Login failed. Invalid credentials.'}), 401
+
+
+@app.route('/login/<loginType>/<uid>')
+def login_dashboard(loginType, uid):
+  print("in login dashboard")
+  if loginType == 'customer':
+    page = 'customer_dashboard.html'
+  elif loginType == 'staff':
+    page = 'staff_dashboard.html'
+  elif loginType == 'manager':
+    page = 'manager_dashboard.html'
+  else:
+    return jsonify({'message': 'Invalid user'}), 401
+  return render_template(page, uid=uid)
 
 
 def get_all_orders():
@@ -160,11 +219,30 @@ def get_all_staff_details():
         text(
             "SELECT U.UID, U.uname, S.sname, S.role ,U.email FROM sql6638399.User as U join sql6638399.Staff as S on U.UID=S.UID ;"
         ))
-    staff = []
+    staff_list = []
     results = result.all()
     for row in results:
-      staff.append(row._mapping)
-    return staff
+      # Create a dictionary for each row
+      staff_dict = {
+          'Staffname': row.sname,
+          'email': row.email,
+          'role': row.role
+      }
+      staff_list.append(staff_dict)
+    return staff_list
+
+
+# def get_all_staff_details():
+#   with engine.connect() as conn:
+#     result = conn.execute(
+#         text(
+#             "SELECT U.UID, U.uname, S.sname, S.role ,U.email FROM sql6638399.User as U join sql6638399.Staff as S on U.UID=S.UID ;"
+#         ))
+#     staff = []
+#     results = result.all()
+#     for row in results:
+#       staff.append(row._mapping)
+#     return staff
 
 
 @app.route('/api/getAllStaff', methods=['GET'])
@@ -175,17 +253,36 @@ def get_all_satff():
   return json.dumps(staff, default=str)
 
 
+# def get_all_customer_details():
+#   with engine.connect() as conn:
+#     result = conn.execute(
+#         text(
+#             "SELECT U.UID, U.uname, concat(C.firstname, ' '  ,C.lastname) as fullname, U.email , C.phone_num FROM sql6638399.User as U join sql6638399.Customer as C on U.UID=C.UID ;"
+#         ))
+#     customer = []
+#     results = result.all()
+#     for row in results:
+#       customer.append(row._mapping)
+#     return customer
+
+
 def get_all_customer_details():
   with engine.connect() as conn:
     result = conn.execute(
         text(
-            "SELECT U.UID, U.uname, concat(C.firstname, ' '  ,C.lastname) as fullname, U.email FROM sql6638399.User as U join sql6638399.Customer as C on U.UID=C.UID ;"
+            "SELECT U.UID, U.uname, concat(C.firstname, ' '  ,C.lastname) as fullname, U.email , C.phone_num FROM sql6638399.User as U join sql6638399.Customer as C on U.UID=C.UID ;"
         ))
-    customer = []
+    customer_list = []
     results = result.all()
     for row in results:
-      customer.append(row._mapping)
-    return customer
+      # Create a dictionary for each row
+      customer_dict = {
+          'fullname': row.fullname,
+          'email': row.email,
+          'phone_num': row.phone_num
+      }
+      customer_list.append(customer_dict)
+    return customer_list
 
 
 @app.route('/api/getAllCustomer', methods=['GET'])
@@ -193,7 +290,7 @@ def get_all_customer():
 
   customer = get_all_customer_details()
   print(f'customer: {customer}')
-  return json.dumps(customer, default=str)
+  return json.dumps(customer)
 
 
 def get_order_of_staff(sid):
