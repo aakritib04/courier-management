@@ -139,11 +139,8 @@ def login_dashboard(loginType, uid):
 
 def get_all_orders():
   with engine.connect() as conn:
-    result = conn.execute(text("select * from sql6638399.Order"))
-    orders = []
-    results = result.all()
-    for row in results:
-      orders.append(row._mapping)
+    results = conn.execute(text("select * from sql6638399.Order"))
+    orders = [r._asdict() for r in results]
     return orders
 
 
@@ -195,22 +192,40 @@ def get_order_detail(oid):
 
     result = conn.execute(
         text(
-            f"SELECT * FROM sql6638399.Order as O join sql6638399.Order_location_details as OD on O.OID=OD.OID where O.OID={oid};"
+            f"SELECT * FROM sql6638399.Order as O join sql6638399.Assigned_order_to as AO on AO.OID=O.OID join sql6638399.Staff as S on AO.SID=S.UID where O.OID={oid};"
         ))
 
-    orders = []
-    results = result.all()
-    for row in results:
-      orders.append(row._mapping)
-    return orders
+    order = [r._asdict() for r in result]
+    return order
+
+
+def get_order_with_location_detail(oid):
+  with engine.connect() as conn:
+
+    result = conn.execute(
+        text(
+            f"SELECT * FROM sql6638399.Order as O left join sql6638399.Order_location_details as OD on O.OID=OD.OID left join sql6638399.Assigned_order_to as AO on AO.OID=O.OID where O.OID={oid};"
+        ))
+
+    order = [r._asdict() for r in result]
+    return order
+
+
+@app.route('/order/<oid>', methods=['GET'])
+def get_order_page(oid):
+
+  order = get_order_detail(oid)
+  print(f'orders: {order}')
+  # return json.dumps(order, default=str)
+  return render_template('manager_view_order_details.html', oid=oid)
 
 
 @app.route('/api/getOrder/<oid>', methods=['GET'])
 def get_order(oid):
 
-  orders = get_order_detail(oid)
-  print(f'orders: {orders}')
-  return json.dumps(orders, default=str)
+  order = get_order_detail(oid)
+  print(f'orders: {order}')
+  return json.dumps(order, default=str)
 
 
 def get_all_staff_details():

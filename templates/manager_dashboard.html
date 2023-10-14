@@ -21,7 +21,8 @@
         <thead>
             <tr>
                 <th>Order ID</th>
-                <th>Status</th>
+                <th>Order Status</th>
+                <th>Payment Status</th>
             </tr>
         </thead>
         <tbody>
@@ -62,21 +63,37 @@
 
     <script>
       $(document).ready(function () {
-          // Sample JSON data with correct structure
-          const ordersData = [
-              { "Order ID": 1, "Status": 'Processing' },
-              { "Order ID": 2, "Status": 'Shipped' },
-              // Add more orders data
-          ];
           var customersData;
           var staffData;
+          var ordersData;
+        $.ajax({
+            url: '/api/getAllOrders',
+            type: 'GET',
+            async: false,
+            success: function(response) {
+                // Handle the response from the server
+              console.log("Response:", response);
+              console.log(JSON.stringify(response))
+              ordersData = JSON.parse(response)
+              console.log("order data")
+              console.log(ordersData)
+
+            },
+            error: function(xhr, textStatus, errorThrown) {
+                // Handle errors from the API
+                console.error("Error:", errorThrown);
+                alert("Signup failed. Please try again.");
+            }
+        });
+
+        
           $.ajax({
               url: '/api/getAllCustomer',
               type: 'GET',
               async: false,
               success: function(response) {
                   // Handle the response from the server
-                console.log("Signup successful. Response:", response);
+                console.log("Response:", response);
                 console.log(JSON.stringify(response))
                 customersData = JSON.parse(response)
 
@@ -94,7 +111,7 @@
             async: false,
             success: function(response) {
                 // Handle the response from the server
-              console.log("Signup successful. Response:", response);
+              console.log(" Response:", response);
               console.log(JSON.stringify(response))
                 staffData = JSON.parse(response)
 
@@ -106,17 +123,20 @@
             }
         });
 
-        console.log('data')
-          console.log(customersData)
-          // const staffData = [
-          //     { "Staff ID": 1, "Name": 'Alice', "Position": 'Manager', "Email": 'alice@example.com' },
-          //     { "Staff ID": 2, "Name": 'Bob', "Position": 'Clerk', "Email": 'bob@example.com' },
-          //     // Add more staff data
-          // ];
 
           // Initialize DataTables and populate with data
-          const ordersTable = $('#ordersTable').DataTable({ data: ordersData, columns: [{ data: "Order ID" }, { data: "Status" }] });
-          // customersData = [{"fullname": "Aakriti Bhardwaj", "email": "aakriti@gmail.com", "phone_num": 1234567890}]
+ //          const ordersTable = $('#ordersTable').DataTable({ data: ordersData, columns: 
+ //            [{ data: "OID",                                                                                   render: function(data, type, row) {
+ //              return '<a href="manager_view_order_details.html/'+data+'">' + data + '</a>';}
+ // }, { data: "order_status" }, { data: "payment_status" }] });
+
+        const ordersTable = $('#ordersTable').DataTable({ data: ordersData, columns: 
+                    [{ data: "OID",                                                                                   render: function(data, type, row) {
+                      var url = "{{ url_for('get_order_page', oid='order_id_placeholder') }}";
+                      url = url.replace('order_id_placeholder', data);
+                      console.log(url)
+                      return '<a href="' + url + '">' + data + '</a>';}
+         }, { data: "order_status" }, { data: "payment_status" }] });
           const customersTable = $('#customersTable').DataTable({ data: customersData, columns: [{ data: "fullname" }, { data: "email" }, { data: "phone_num" }] });
           const staffTable = $('#staffTable').DataTable({ data: staffData, columns: [{ data: "Staffname" }, { data: "email" }, { data: "role" }] });
       });
