@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Order Details</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+   <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+</head>
+  <style>
+    button {
+      margin-left:40px;
+    }
+    .form-control {
+      width: 40%;
+      margin: 10px;
+    }
+  </style>
+<body>
+    <div class="container">
+        <h2>Order Details</h2>
+
+        <table id="orderDetailsTable" class="display" style="width:100%">
+          <tbody>
+              <!-- Table will be populated dynamically -->
+          </tbody>
+        </table>
+
+        <br>
+      <h2>Location Details</h2>
+
+      <table id="orderLocationDetailsTable" class="display" style="width:100%">
+        <thead>
+          <tr>
+            <th>Location</th>
+            <th>Date & Time</th>
+          </tr>
+        </thead>
+        <tbody>
+            <!-- Table will be populated dynamically -->
+        </tbody>
+      </table>
+    </div>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script>
+       var oid = "{{oid}}"
+      var uid = "{{uid}}"
+        $(document).ready(function () {
+
+            var orderData;
+          $.ajax({
+              url: '/api/getOrder/'+oid,
+              type: 'GET',
+              async: false,
+              success: function(response) {
+                  // Handle the response from the server
+                console.log("Response:", response);
+                console.log(JSON.stringify(response))
+                orderData = JSON.parse(response)
+                console.log("order data")
+                console.log(orderData)
+
+              },
+              error: function(xhr, textStatus, errorThrown) {
+                  // Handle errors from the API
+                  console.error("Error:", errorThrown);
+                  alert("Signup failed. Please try again.");
+              }
+          });
+            var orderLocationData;
+          $.ajax({
+              url: '/api/getOrderWithLocation/'+oid,
+              type: 'GET',
+              async: false,
+              success: function(response) {
+                  // Handle the response from the server
+                console.log("Response:", response);
+                console.log(JSON.stringify(response))
+                orderLocationData = JSON.parse(response)
+                console.log("orderLocationData data")
+                console.log(orderLocationData)
+
+              },
+              error: function(xhr, textStatus, errorThrown) {
+                  // Handle errors from the API
+                  console.error("Error:", errorThrown);
+                  alert("Signup failed. Please try again.");
+              }
+          });
+
+          var orderDetails = [];
+          var to_be_added = ["OID", "sender", "receiver", "pickup_address_num", "p_city", "p_state", "p_pin", "d_address_num" , "d_city" , "d_state" , "d_pin" , "order_place_date" , "order_status", "payment_status" , "pickup_date", "pickup_by", "delivery_date", "delivery_by", "sname"]
+          var key_mapping = {
+              "OID": "OID",
+              "sender": "Sender",
+              "receiver": "Receiver",
+              "pickup_address_num": "Pickup Address Number",
+              "p_city": "Pickup City",
+              "p_state": "Pickup State",
+              "p_pin": "Pickup PIN",
+              "d_address_num": "Delivery Address Number",
+              "d_city": "Delivery City",
+              "d_state": "Delivery State",
+              "d_pin": "Delivery PIN",
+              "order_place_date": "Order Place Date",
+              "order_status": "Order Status",
+              "payment_status": "Payment Status",
+              "pickup_date": "Pickup Date",
+              "pickup_by": "Pickup By",
+              "delivery_date": "Delivery Date",
+              "delivery_by": "Delivery By",
+              "sname": "Staff",
+          }
+
+          for (var key in orderData[0]) {
+              if (orderData[0].hasOwnProperty(key) && to_be_added.includes(key)) {
+                  if (key == 'OID') {
+                      orderData[0][key] = "{{oid}}"
+                  }
+                  value = orderData[0][key]
+                  orderDetails.push([key_mapping[key], value]);
+              }
+          }
+          console.log(orderDetails)
+          var table = $('#orderDetailsTable').DataTable({
+              data: orderDetails,
+              paging: false, // Disable pagination
+              Sort: false,
+              columns: [
+                  { data: "0" },
+                  { data: "1" }
+              ]
+          });
+           const locationTable = $('#orderLocationDetailsTable').DataTable({ data: orderLocationData, columns: [{ data: "location" }, { data: "date_time" }] });
+
+        });
+
+
+     
+    </script>
+</body>
+</html>

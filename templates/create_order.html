@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Courier Management Company</title>
+  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker3.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.5.20/jquery.datetimepicker.min.css" rel="stylesheet">
+</head>
+
+  <body>
+    <h1>Welcome to the CMC Services</h1>
+    <div class="container">
+        <h3>Create Order</h3>
+        <form id="orderForm">
+            <div class="form-group">
+                <label for="sender">Sender:</label>
+                <input type="text" class="form-control" id="sender" name="sender" required>
+            </div>
+            <div class="form-group">
+                <label for="receiver">Receiver:</label>
+                <input type="text" class="form-control" id="receiver" name="receiver" required>
+            </div>
+            <div class="form-group">
+                <label for="pickupAddress">Pickup Address Number:</label>
+                <input type="text" class="form-control" id="pickupAddress" name="pickupAddress" required>
+            </div>
+            <div class="form-group">
+                <label for="pickupCity">Pickup City:</label>
+                <input type="text" class="form-control" id="pickupCity" name="pickupCity" required>
+            </div>
+            <div class="form-group">
+                <label for="pickupState">Pickup State:</label>
+                <input type="text" class="form-control" id="pickupState" name="pickupState" required>
+            </div>
+            <div class="form-group">
+                <label for="pickupPin">Pickup PIN:</label>
+                <input type="text" class="form-control" id="pickupPin" name="pickupPin" required>
+            </div>
+            <div class="form-group">
+                <label for="deliveryAddress">Delivery Address Number:</label>
+                <input type="text" class="form-control" id="deliveryAddress" name="deliveryAddress" required>
+            </div>
+          <div class="form-group">
+              <label for="deliveryCity">Delivery City:</label>
+              <input type="text" class="form-control" id="deliveryCity" name="deliveryCity" required>
+          </div>
+            <div class="form-group">
+                <label for="deliveryState">Delivery State:</label>
+                <input type="text" class="form-control" id="deliveryState" name="deliveryState" required>
+            </div>
+            <div class="form-group">
+                <label for="deliveryPin">Delivery PIN:</label>
+                <input type="text" class="form-control" id="deliveryPin" name="deliveryPin" required>
+            </div>
+
+          <div class="form-group">
+              <label for="pickupDate">Pickup Date and Time:</label>
+              <input type="text" class="form-control" id="pickupDate" name="pickupDate" required>
+          </div>
+            <button type="submit" class="btn btn-primary" id="submitButton">Submit</button>
+        </form>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.5.20/jquery.datetimepicker.full.min.js"></script>
+
+    <script>
+      $('#pickupDate').datetimepicker({
+          format: 'Y-m-d H:i', // Date and time format
+      });
+      
+        $("form#orderForm").submit(function (event) {
+          event.preventDefault();
+          var loginType = "{{loginType}}"
+          var uid = "{{uid}}"
+          const formData = new FormData(event.target);
+          const formDataJSON = {};
+          formData.forEach((value, key) => {
+              formDataJSON[key] = value;
+          });
+          formDataJSON['uid']=uid
+          console.log(formDataJSON); 
+
+          $.ajax({
+              url: '/createOrder', 
+              type: 'POST',
+              async: false,
+              data: JSON.stringify(formDataJSON),
+              contentType: 'application/json',
+              success: function (response) {
+                  console.log('Order Added: ', response);
+                window.location.href ='/login/'+loginType+'/'+uid
+              },
+              error: function (xhr, textStatus, errorThrown) {
+                  console.error('Error:', errorThrown);
+              }
+          });
+      });
+    </script>
+    
+  </body>
+</html>

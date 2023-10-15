@@ -45,12 +45,7 @@ def sign_up():
       return jsonify(
           {'message': 'Signup failed. Username or Email already exists.'}), 401
     else:
-      result = conn.execute(text(f"SELECT MAX(UID) FROM sql6638399.User;"))
-      UID = result.all()[0][0]
-      if UID:
-        uid = UID + 1
-      else:
-        uid = 1
+
       conn.execute(
           text(
               f"INSERT INTO `sql6638399`.`User`(`UID`,`uname`,`user_type`,`email`,`password`) VALUES ({uid},'{username}','{signupType}','{email}','{encpass}');"
@@ -134,7 +129,7 @@ def login_dashboard(loginType, uid):
     page = 'manager_dashboard.html'
   else:
     return jsonify({'message': 'Invalid user'}), 401
-  return render_template(page, uid=uid)
+  return render_template(page, uid=uid, loginType=loginType)
 
 
 def get_all_orders():
@@ -157,26 +152,8 @@ def get_all_customer_orders(customer):
     result = conn.execute(
         text(f"select * from sql6638399.Order where UID={customer}"))
 
-    orders = []
-    results = result.all()
-    for row in results:
-      orders.append(row._mapping)
-    return orders
-
-
-# def get_customer_orders(customer):
-#   with engine.connect() as conn:
-
-#     result = conn.execute(
-#         text(
-#             f"SELECT * FROM sql6638399.Order as O join sql6638399.Order_location_details as OD on O.OID=OD.OID where UID={customer};"
-#         ))
-
-#     orders = []
-#     results = result.all()
-#     for row in results:
-#       orders.append(row._mapping)
-#     return orders
+    order = [r._asdict() for r in result]
+    return order
 
 
 @app.route('/api/getAllUserOrders/<uid>', methods=['GET'])
@@ -192,11 +169,34 @@ def get_order_detail(oid):
 
     result = conn.execute(
         text(
-            f"SELECT * FROM sql6638399.Order as O join sql6638399.Assigned_order_to as AO on AO.OID=O.OID join sql6638399.Staff as S on AO.SID=S.UID where O.OID={oid};"
+            f"SELECT * FROM sql6638399.Order as O left join sql6638399.Assigned_order_to as AO on AO.OID=O.OID left join sql6638399.Staff as S on AO.SID=S.UID where O.OID={oid};"
         ))
 
     order = [r._asdict() for r in result]
     return order
+
+
+# def get_order_detail(oid):
+#   with engine.connect() as conn:
+
+#     result = conn.execute(
+#         text(
+#             f"SELECT * FROM sql6638399.Order as O join sql6638399.Assigned_order_to as AO on AO.OID=O.OID join sql6638399.Staff as S on AO.SID=S.UID where O.OID={oid};"
+#         ))
+
+#     order = [r._asdict() for r in result]
+#     return order
+
+# def get_order_with_location_detail(oid):
+#   with engine.connect() as conn:
+
+#     result = conn.execute(
+#         text(
+#             f"SELECT * FROM sql6638399.Order as O left join sql6638399.Order_location_details as OD on O.OID=OD.OID left join sql6638399.Assigned_order_to as AO on AO.OID=O.OID where O.OID={oid};"
+#         ))
+
+#     order = [r._asdict() for r in result]
+#     return order
 
 
 def get_order_with_location_detail(oid):
@@ -204,20 +204,53 @@ def get_order_with_location_detail(oid):
 
     result = conn.execute(
         text(
-            f"SELECT * FROM sql6638399.Order as O left join sql6638399.Order_location_details as OD on O.OID=OD.OID left join sql6638399.Assigned_order_to as AO on AO.OID=O.OID where O.OID={oid};"
+            f"SELECT * FROM sql6638399.Order_location_details where OID={oid};"
         ))
 
     order = [r._asdict() for r in result]
     return order
 
 
-@app.route('/order/<oid>/<uid>', methods=['GET'])
-def get_order_page(oid, uid):
+@app.route('/order/<oid>/<uid>/<loginType>', methods=['GET'])
+def get_order_page(oid, uid, loginType):
 
   order = get_order_detail(oid)
   print(f'orders: {order}')
   # return json.dumps(order, default=str)
-  return render_template('manager_view_order_details.html', oid=oid, uid=uid)
+  if loginType == 'customer':
+    page = 'customer_view_order_details.html'
+  elif loginType == 'staff':
+    page = 'staff_view_order_details.html'
+  elif loginType == 'manager':
+    page = 'manager_view_order_details.html'
+  else:
+    return jsonify({'message': 'Invalid user'}), 401
+  print(f"page: {page}")
+  return render_template(page, oid=oid, uid=uid, loginType=loginType)
+
+
+@app.route('/create_order_page/<loginType>/<uid>', methods=['GET'])
+def create_order_page(loginType, uid):
+  if loginType == 'customer':
+    page = 'create_order.html'
+  elif loginType == 'staff':
+    page = 'create_order_by_staff.html'
+  else:
+    return jsonify({'message': 'Invalid user'}), 401
+  print(f"page: {page}")
+  return render_template(page, uid=uid, loginType=loginType)
+
+
+@app.route('/update_order_page/<loginType>/<oid>/<uid>', methods=['GET'])
+def update_order_page(loginType, oid, uid):
+  if loginType == 'customer':
+    page = 'update_order.html'
+  elif loginType == 'staff':
+    page = 'update_order_by_staff.html'
+  else:
+    return jsonify({'message': 'Invalid user'}), 401
+  print(f"page: {page}")
+  return render_template(page, oid=oid, loginType=loginType, uid=uid)
 
 
 @app.route('/api/getOrder/<oid>', methods=['GET'])
@@ -225,6 +258,14 @@ def get_order(oid):
 
   order = get_order_detail(oid)
   print(f'orders: {order}')
+  return json.dumps(order, default=str)
+
+
+@app.route('/api/getOrderWithLocation/<oid>', methods=['GET'])
+def get_order_with_location(oid):
+
+  order = get_order_with_location_detail(oid)
+  print(f'orders with location: {order}')
   return json.dumps(order, default=str)
 
 
@@ -369,32 +410,43 @@ def create_order():
   cid = data.get('uid')
   sender = data.get('sender')
   receiver = data.get('receiver')
-  pickup_address_num = data.get('pickup_address_num')
-  p_city = data.get('p_city')
-  p_state = data.get('p_state')
-  p_pin = data.get('p_pin')
-  d_address_num = data.get('d_address_num')
-  d_city = data.get('d_city')
-  d_state = data.get('d_state')
-  d_pin = data.get('d_pin')
-  order_place_date = data.get('order_place_date')
-  order_status = data.get('order_status')
-  payment_status = data.get('payment_status')
-  pickup_date = data.get('pickup_date')
+  pickup_address_num = data.get('pickupAddress')
+  p_city = data.get('pickupCity')
+  p_state = data.get('pickupState')
+  p_pin = data.get('pickupPin')
+  d_address_num = data.get('deliveryAddress')
+  d_city = data.get('deliveryCity')
+  d_state = data.get('deliveryState')
+  d_pin = data.get('deliveryPin')
+  pickup_date = data.get('pickupDate')
+  curr = datetime.datetime.now()
+  curr_date_time = curr.strftime("%Y-%m-%d %H:%M:%S")
+  order_place_date = curr_date_time
+  payment_status = 'confirmed'
+  order_status = 'To be confirmed'
 
   # curr = datetime.datetime.now()
   # curr_date_time = curr.strftime("%Y-%m-%d %H:%M:%S")
 
   # add try catch
   with engine.connect() as conn:
-    query = f"INSERT INTO `sql6638399`.`Order`(`UID`,`sender`,`receiver`,`pickup_address_num`,`p_city`,`p_state`,`p_pin`,`d_address_num`,`d_city`,`d_state`,`d_pin`,`order_place_date`,`order_status`,`payment_status`,`pickup_date`) VALUES({cid},'{sender}','{receiver}','{pickup_address_num}','{p_city}','{p_state}',{p_pin},'{d_address_num}','{d_city}','{d_state}',{d_pin},'{order_place_date}','{order_status}','{payment_status}','{pickup_date}');"
+    result = conn.execute(text(f"SELECT MAX(OID) FROM sql6638399.Order;"))
+    OID = result.all()[0][0]
+    if OID:
+      oid = OID + 1
+    else:
+      oid = 1
+    query = f"INSERT INTO `sql6638399`.`Order`(`OID`, `UID`,`sender`,`receiver`,`pickup_address_num`,`p_city`,`p_state`,`p_pin`,`d_address_num`,`d_city`,`d_state`,`d_pin`,`order_place_date`,`pickup_date`, `payment_status`, `order_status`) VALUES({oid}, {cid},'{sender}','{receiver}','{pickup_address_num}','{p_city}','{p_state}',{p_pin},'{d_address_num}','{d_city}','{d_state}',{d_pin},'{order_place_date}','{pickup_date}', '{payment_status}', '{order_status}');"
     print(f"query: {query}")
     conn.execute(text(query))
 
-    if order_status == 'confirmed' and payment_status == 'confirmed':
-      query2 = f"INSERT INTO `sql6638399`.`Order_location_details` (`OID`,`date_time`,`location`) VALUES({oid},'{order_place_date}','{p_city}');"
-      print(f"query2: {query2}")
-      conn.execute(text(query2))
+    query2 = f"INSERT INTO `sql6638399`.`Order_location_details` (`OID`,`date_time`,`location`) VALUES({oid},'{order_place_date}','{p_city}');"
+    print(f"query2: {query2}")
+    conn.execute(text(query2))
+
+    query3 = f"INSERT INTO `sql6638399`.`Assigned_order_to`(`OID`) VALUES({oid});"
+    print(f"query3: {query3}")
+    conn.execute(text(query3))
 
     conn.commit()
 
@@ -403,37 +455,74 @@ def create_order():
   }), 200
 
 
-@app.route('/updateOrder', methods=['POST'])
-def update_order():
+# @app.route('/createOrder', methods=['POST'])
+# def create_order():
+#   # by customer or staff
+#   data = request.json
+#   cid = data.get('uid')
+#   sender = data.get('sender')
+#   receiver = data.get('receiver')
+#   pickup_address_num = data.get('pickup_address_num')
+#   p_city = data.get('p_city')
+#   p_state = data.get('p_state')
+#   p_pin = data.get('p_pin')
+#   d_address_num = data.get('d_address_num')
+#   d_city = data.get('d_city')
+#   d_state = data.get('d_state')
+#   d_pin = data.get('d_pin')
+#   order_place_date = data.get('order_place_date')
+#   order_status = data.get('order_status')
+#   payment_status = data.get('payment_status')
+#   pickup_date = data.get('pickup_date')
+
+#   # curr = datetime.datetime.now()
+#   # curr_date_time = curr.strftime("%Y-%m-%d %H:%M:%S")
+
+#   # add try catch
+#   with engine.connect() as conn:
+#     query = f"INSERT INTO `sql6638399`.`Order`(`UID`,`sender`,`receiver`,`pickup_address_num`,`p_city`,`p_state`,`p_pin`,`d_address_num`,`d_city`,`d_state`,`d_pin`,`order_place_date`,`order_status`,`payment_status`,`pickup_date`) VALUES({cid},'{sender}','{receiver}','{pickup_address_num}','{p_city}','{p_state}',{p_pin},'{d_address_num}','{d_city}','{d_state}',{d_pin},'{order_place_date}','{order_status}','{payment_status}','{pickup_date}');"
+#     print(f"query: {query}")
+#     conn.execute(text(query))
+
+#     # if order_status == 'confirmed' and payment_status == 'confirmed':
+#     #   query2 = f"INSERT INTO `sql6638399`.`Order_location_details` (`OID`,`date_time`,`location`) VALUES({oid},'{order_place_date}','{p_city}');"
+#     #   print(f"query2: {query2}")
+#     #   conn.execute(text(query2))
+
+#     conn.commit()
+
+#   return jsonify({
+#       'message': 'successfully created order',
+#   }), 200
+
+
+@app.route('/updateOrder/<oid>', methods=['POST'])
+def update_order(oid):
   # by customer
   data = request.json
-  oid = data.get('oid')
   sender = data.get('sender')
   receiver = data.get('receiver')
-  pickup_address_num = data.get('pickup_address_num')
-  p_city = data.get('p_city')
-  p_state = data.get('p_state')
-  p_pin = data.get('p_pin')
-  d_address_num = data.get('d_address_num')
-  d_city = data.get('d_city')
-  d_state = data.get('d_state')
-  d_pin = data.get('d_pin')
-  order_status = data.get('order_status')
-  payment_status = data.get('payment_status')
-  pickup_date = data.get('pickup_date')
+  pickup_address_num = data.get('pickupAddress')
+  p_city = data.get('pickupCity')
+  p_state = data.get('pickupState')
+  p_pin = data.get('pickupPin')
+  d_address_num = data.get('deliveryAddress')
+  d_city = data.get('deliveryCity')
+  d_state = data.get('deliveryState')
+  d_pin = data.get('deliveryPin')
+  pickup_date = data.get('pickupDate')
 
   curr = datetime.datetime.now()
   curr_date_time = curr.strftime("%Y-%m-%d %H:%M:%S")
   # add try catch
   with engine.connect() as conn:
-    query = f"UPDATE `sql6638399`.`Order` SET `sender` = '{sender}',`receiver` = '{receiver}',`pickup_address_num` = '{pickup_address_num}',`p_city` = '{p_city}',`p_state` = '{p_state}',`p_pin` = {p_pin},`d_address_num` = '{d_address_num}',`d_city` = '{d_city}',`d_state` = '{d_state}',`d_pin` = {d_pin},`order_status` = '{order_status}',`payment_status` = '{payment_status}',`pickup_date` = '{pickup_date}' WHERE `OID` = {oid};"
+    query = f"UPDATE `sql6638399`.`Order` SET `sender` = '{sender}',`receiver` = '{receiver}',`pickup_address_num` = '{pickup_address_num}',`p_city` = '{p_city}',`p_state` = '{p_state}',`p_pin` = {p_pin},`d_address_num` = '{d_address_num}',`d_city` = '{d_city}',`d_state` = '{d_state}',`d_pin` = {d_pin}, `pickup_date` = '{pickup_date}' WHERE `OID` = {oid};"
     print(f"query: {query}")
     conn.execute(text(query))
 
-    if order_status == 'confirmed' and payment_status == 'confirmed':
-      query2 = f"INSERT INTO `sql6638399`.`Order_location_details` (`OID`,`date_time`,`location`) VALUES({oid},'{curr_date_time}','{p_city}');"
-      print(f"query2: {query2}")
-      conn.execute(text(query2))
+    query2 = f"UPDATE `sql6638399`.`Order_location_details` SET `date_time` = '{curr_date_time}',`location` = '{p_city}' WHERE `OID` = {oid};"
+    print(f"query2: {query2}")
+    conn.execute(text(query2))
 
     conn.commit()
 
@@ -475,7 +564,7 @@ def update_delivery_details():
 @app.route('/cancelOrder/<oid>', methods=['DELETE'])
 def cancel_order(oid):
   #by staff/customer
-
+  print("in cancel order")
   curr = datetime.datetime.now()
   date_time = curr.strftime("%Y-%m-%d %H:%M:%S")
   # add try catch
