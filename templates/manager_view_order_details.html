@@ -10,6 +10,10 @@
     button {
       margin-left:40px;
     }
+    .form-control {
+      width: 40%;
+      margin: 10px;
+    }
   </style>
 <body>
     <div class="container">
@@ -24,10 +28,11 @@
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
     <script>
+       var oid = "{{oid}}"
+      var uid = "{{uid}}"
         $(document).ready(function () {
 
             var orderData;
-          var oid = "{{oid}}"
           $.ajax({
               url: '/api/getOrder/'+oid,
               type: 'GET',
@@ -81,7 +86,7 @@
                   }
                   value = orderData[0][key]
                   if (key == 'sname') {
-                    value = value + ' <button class="btn btn-primary" id ="assign-staff" onclick="callFlaskAPI()"">Assign Staff</button>'
+                    value = value + ' <button class="btn btn-primary" id ="assign-staff" onclick="callFlaskAPI()"">Assign Staff</button> <div id="dropdownContainer" style="display:none" ><select id="dropdown" class="form-control"></select> <button id="updateFieldBtn" class="btn btn-success" id ="update-assigned-staff" onclick="callFlaskAssignAPI()">Update Assigned Staff</button> </div>'
                   }
                   orderDetails.push([key_mapping[key], value]);
               }
@@ -100,7 +105,8 @@
          
         });
 
-
+      var staff_id_mapping ={};
+      var staff_data = []
       function callFlaskAPI() {
         $.ajax({
             url: '/api/getAllStaff', 
@@ -109,6 +115,16 @@
             success: function(response) {
                 // Handle the API response here
                 console.log('API Response:', response);
+                var dropdown = $('#dropdown');
+                dropdown.empty();
+                var data = JSON.parse(response)
+                staff_data = data
+                console.log(data)
+                for (var i = 0; i < data.length; i++) {
+                    
+                    dropdown.append($('<option>').text(data[i]['Staffname']).val(data[i]['Staffname']));
+                }
+                $('#dropdownContainer').show();
             },
             error: function(xhr, textStatus, errorThrown) {
                 // Handle errors from the API
@@ -116,6 +132,36 @@
                 alert('API request failed.');
             }
         });
+      }
+
+      function callFlaskAssignAPI() {
+        console.log("in callFlaskAssignAPI")
+            var selectedValue = $('#dropdown').val();
+            console.log(selectedValue)
+            var staffNameToUidMapping = {};
+
+              staff_data.forEach(function (staff) {
+                staffNameToUidMapping[staff.Staffname] = staff.UID;
+            });
+            console.log(staffNameToUidMapping)
+            var formData = JSON.stringify({ "order": oid,
+                                          "staff" : staffNameToUidMapping[selectedValue],
+                                          "manager" : uid })
+            $.ajax({
+                url: '/assign', 
+                type: 'POST',
+                async: false,
+                data: formData,
+                contentType: 'application/json',
+                success: function (response) {
+                    console.log('Field updated:', response);
+                    window.location.reload()
+                },
+                error: function (xhr, textStatus, errorThrown) {
+                    console.error('Error:', errorThrown);
+                }
+            });
+
       }
     </script>
 </body>

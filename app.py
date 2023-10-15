@@ -211,13 +211,13 @@ def get_order_with_location_detail(oid):
     return order
 
 
-@app.route('/order/<oid>', methods=['GET'])
-def get_order_page(oid):
+@app.route('/order/<oid>/<uid>', methods=['GET'])
+def get_order_page(oid, uid):
 
   order = get_order_detail(oid)
   print(f'orders: {order}')
   # return json.dumps(order, default=str)
-  return render_template('manager_view_order_details.html', oid=oid)
+  return render_template('manager_view_order_details.html', oid=oid, uid=uid)
 
 
 @app.route('/api/getOrder/<oid>', methods=['GET'])
@@ -229,6 +229,7 @@ def get_order(oid):
 
 
 def get_all_staff_details():
+  print("in get all staff details")
   with engine.connect() as conn:
     result = conn.execute(
         text(
@@ -239,6 +240,7 @@ def get_all_staff_details():
     for row in results:
       # Create a dictionary for each row
       staff_dict = {
+          'UID': row.UID,
           'Staffname': row.sname,
           'email': row.email,
           'role': row.role
@@ -343,7 +345,13 @@ def assign_order():
 
   # add try catch
   with engine.connect() as conn:
-    query = f"INSERT INTO sql6638399.Assigned_order_to values ({order}, {staff},{manager}, '{curr_date_time}');"
+    query1 = f"SELECT * FROM sql6638399.Assigned_order_to where OID = {order};"
+    result = conn.execute(text(query1))
+    results = result.all()
+    if results:
+      query = f"UPDATE `sql6638399`.`Assigned_order_to` SET `SID` = {staff},`MID` = {manager},`assigned_date` = '{curr_date_time}' WHERE `OID` = {order};"
+    else:
+      query = f"INSERT INTO sql6638399.Assigned_order_to values ({order}, {staff},{manager}, '{curr_date_time}');"
     print(f"query: {query}")
     conn.execute(text(query))
     conn.commit()

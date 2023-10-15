@@ -129,11 +129,12 @@
  //            [{ data: "OID",                                                                                   render: function(data, type, row) {
  //              return '<a href="manager_view_order_details.html/'+data+'">' + data + '</a>';}
  // }, { data: "order_status" }, { data: "payment_status" }] });
-
+        var uid = "{{uid}}"
         const ordersTable = $('#ordersTable').DataTable({ data: ordersData, columns: 
                     [{ data: "OID",                                                                                   render: function(data, type, row) {
-                      var url = "{{ url_for('get_order_page', oid='order_id_placeholder') }}";
+                      var url = "{{ url_for('get_order_page', oid='order_id_placeholder', uid ='user_id_placeholder') }}";
                       url = url.replace('order_id_placeholder', data);
+                      url = url.replace('user_id_placeholder', uid);
                       console.log(url)
                       return '<a href="' + url + '">' + data + '</a>';}
          }, { data: "order_status" }, { data: "payment_status" }] });
