@@ -6,10 +6,128 @@
     <title>Courier Management Company</title>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
-<body>
+  <style>
+    body {
+      padding:20px;
+    }
+  </style>
+  <body>
+    {% include "navbar.html" %}
     <h1>Welcome to the CMC Services</h1>
-    <p>STAFF:: {{uid}}</p>
-</body>
+    <p>Staff :: {{uid}}</p>
+    <p>loginType :: {{loginType}}</p>
+    <button id="createOrder" class="btn btn-success" onclick="callFlaskCreateOrderAPI()">Create Order</button>
+    <h2>Orders and Status</h2>
+    <table id="ordersTable" class="display" style="width:100%">
+        <thead>
+            <tr>
+                <th>Order ID</th>
+                <th>Order Status</th>
+                <th>Payment Status</th>
+                <th>Order Placed On </th>
+                <th>Update Order</th>
+                <th>Delete Order</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Table will be populated dynamically -->
+        </tbody>
+    </table>
 
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+
+    <script>
+      var ordersTable;
+      $(document).ready(function () {
+          var ordersData;
+          var uid = "{{uid}}"
+
+        $.ajax({
+            url: '/api/getStaffOrders/'+uid,
+            type: 'GET',
+            async: false,
+            success: function(response) {
+                // Handle the response from the server
+              console.log("Response:", response);
+              console.log(JSON.stringify(response))
+              ordersData = JSON.parse(response)
+              console.log("order data")
+              console.log(ordersData)
+
+            },
+            error: function(xhr, textStatus, errorThrown) {
+                // Handle errors from the API
+                console.error("Error:", errorThrown);
+                alert("Signup failed. Please try again.");
+            }
+        });
+
+
+        var uid = "{{uid}}"
+        var loginType = "{{loginType}}"
+        ordersTable = $('#ordersTable').DataTable({ data: ordersData, order: [[0, 'desc']], columns: 
+                    [{ data: "OID",                                                                                   render: function(data, type, row) {
+                      var url = "{{ url_for('get_order_page', oid='order_id_placeholder', uid ='user_id_placeholder', loginType='login_type_placeholder') }}";
+                      url = url.replace('order_id_placeholder', data);
+                      url = url.replace('user_id_placeholder', uid);
+                      url = url.replace('login_type_placeholder', loginType);
+                      console.log(url)
+                      return '<a href="' + url + '">' + data + '</a>';}
+         }, { data: "order_status" }, { data: "payment_status" }, { data: "order_place_date" }, {data: "order_status", render: function(data, type, row) { return '<button  id="update_order" onclick="callFlaskUpdateOrderAPI()" style="font-size:24px"><i class="fa fa-edit"></i></button>' }}, { data: "order_status", render: function(data, type, row) { return '<button id="delete_order" onclick="callFlaskDeleteOrderAPI()" style="font-size:24px"><i class="fa fa-trash-o"></i></button>' } }] });
+
+
+
+      });
+
+      function callFlaskUpdateOrderAPI() {
+        var uid = "{{uid}}"
+        var loginType = "{{loginType}}"
+        $('#ordersTable tbody').off('click', 'button#update_order') // unbind existsing events
+        $('#ordersTable tbody').on('click', 'button#update_order', function() {
+          var rowData = ordersTable.row($(this).closest('tr')).data();
+            console.log(rowData)
+            var oid = rowData['OID']; // Get the value of the first column
+            var loginType = "{{loginType}}"
+            window.location.href ='/update_order_page/'+loginType+'/'+oid+'/'+uid
+
+        });
+      }
+
+        function callFlaskDeleteOrderAPI() {
+        var uid = "{{uid}}"
+        var loginType = "{{loginType}}"
+        $('#ordersTable tbody').off('click', 'button#delete_order') // unbind existsing events
+        $('#ordersTable tbody').on('click', 'button#delete_order', function() {
+          var rowData = ordersTable.row($(this).closest('tr')).data();
+            console.log(rowData)
+            var oid = rowData['OID']; // Get the value of the first column
+            var loginType = "{{loginType}}"
+            // window.location.href ='/delete_order_page/'+loginType+'/'+oid+'/'+uid
+          const userConfirmed = confirm("Are you sure you want to Cancel this Order?");
+          if (userConfirmed) {
+          $.ajax({
+              url: '/cancelOrder/'+oid, 
+              type: 'DELETE',
+              async: false,
+              success: function (response) {
+                  console.log('Order Canceled: ', response);
+                  window.location.href ='/login/'+loginType+'/'+uid
+              },
+              error: function (xhr, textStatus, errorThrown) {
+                  console.error('Error:', errorThrown);
+              }
+          });
+
+        }
+
+        });
+      }
+    </script>
+  </body>
+  </html>
 </html>

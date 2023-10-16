@@ -9,7 +9,7 @@ app = Flask(__name__)
 
 
 @app.route("/")
-def hello_world():
+def landing():
   # return "<p>Hello, Aakriti!</p>"
   return render_template('home.html')
 
@@ -220,7 +220,7 @@ def get_order_page(oid, uid, loginType):
   if loginType == 'customer':
     page = 'customer_view_order_details.html'
   elif loginType == 'staff':
-    page = 'staff_view_order_details.html'
+    page = 'customer_view_order_details.html'
   elif loginType == 'manager':
     page = 'manager_view_order_details.html'
   else:
@@ -359,8 +359,7 @@ def get_order_of_staff(sid):
         ))
     orders = []
     results = result.all()
-    for row in results:
-      orders.append(row._mapping)
+    orders = [r._asdict() for r in results]
     return orders
 
 
@@ -422,7 +421,7 @@ def create_order():
   curr = datetime.datetime.now()
   curr_date_time = curr.strftime("%Y-%m-%d %H:%M:%S")
   order_place_date = curr_date_time
-  payment_status = 'confirmed'
+  payment_status = 'Confirmed'
   order_status = 'To be confirmed'
 
   # curr = datetime.datetime.now()
@@ -531,26 +530,37 @@ def update_order(oid):
   }), 200
 
 
-@app.route('/updateDeliveryDetails', methods=['POST'])
-def update_delivery_details():
+@app.route('/updateDeliveryDetails/<oid>', methods=['POST'])
+def update_delivery_details(oid):
   #by staff
   data = request.json
-  oid = data.get('oid')
-  pickup_date = data.get('pickup_date')
-  pickup_by = data.get('pickup_by')
-  delivery_date = data.get('delivery_date')
-  delivery_by = data.get('delivery_by')
+  order_status = data.get('orderStatus')
+  pickup_by = data.get('pickupBy')
+  delivery_date = data.get('deliveryDate')
+  delivery_by = data.get('deliveryBy')
   location = data.get('location')
-
+  print(f"order_status: {order_status}")
   curr = datetime.datetime.now()
   date_time = curr.strftime("%Y-%m-%d %H:%M:%S")
   # add try catch
   with engine.connect() as conn:
-    query = f"UPDATE `sql6638399`.`Order` SET `pickup_date` = '{pickup_date}',`pickup_by` = '{pickup_by}',`delivery_date` = '{delivery_date}',`delivery_by` = '{delivery_by}'  WHERE `OID` = {oid};"
+    query = f"UPDATE `sql6638399`.`Order` SET "
+    if order_status:
+      query += f" `order_status` = '{order_status}', "
+    if pickup_by:
+      query += f" `pickup_by` = '{pickup_by}', "
+    if delivery_date:
+      query += f" `delivery_date` = '{delivery_date}', "
+    if delivery_by:
+      query += f" `delivery_by` = '{delivery_by}', "
+    query = query.rstrip(', ')
+    print(f"query: {query}")
+    query += f" WHERE `OID` = {oid}; "
+
     print(f"query: {query}")
     conn.execute(text(query))
 
-    if location is not None:
+    if location:
       query2 = f"INSERT INTO `sql6638399`.`Order_location_details` (`OID`,`date_time`,`location`) VALUES({oid},'{date_time}','{location}');"
       print(f"query2: {query2}")
       conn.execute(text(query2))
