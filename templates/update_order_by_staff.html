@@ -5,10 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Courier Management Company</title>
   <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-  <!-- <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker3.min.css" rel="stylesheet"> -->
+
   <link href="https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.5.20/jquery.datetimepicker.min.css" rel="stylesheet">
-  <!-- <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet"> -->
+
   <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.18/css/bootstrap-select.min.css" rel="stylesheet">
 
 </head>
@@ -76,7 +75,7 @@
             type: 'GET',
             async: false,
             success: function(response) {
-                // Handle the response from the server
+                
               console.log("Response:", response);
               console.log(JSON.stringify(response))
               orderData = JSON.parse(response)
@@ -93,7 +92,7 @@
 
             },
             error: function(xhr, textStatus, errorThrown) {
-                // Handle errors from the API
+               
                 console.error("Error:", errorThrown);
                 alert("failed. Please try again.");
             }

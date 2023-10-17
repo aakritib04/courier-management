@@ -10,14 +10,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def landing():
-  # return "<p>Hello, Aakriti!</p>"
   return render_template('home.html')
-
-
-@app.route("/test")
-def hello_TEST():
-  # return "<p>Hello, Aakriti!</p>"
-  return render_template('signup.html', uid=10, signupType='aakriti')
 
 
 @app.route('/signup', methods=['GET', 'POST'])
@@ -45,7 +38,13 @@ def sign_up():
       return jsonify(
           {'message': 'Signup failed. Username or Email already exists.'}), 401
     else:
-
+      result = conn.execute(text(f"SELECT MAX(UID) FROM sql6638399.User;"))
+      UID = result.all()[0][0]
+      if UID:
+        uid = UID + 1
+      else:
+        uid = 1
+      print(f"uid:{uid}")
       conn.execute(
           text(
               f"INSERT INTO `sql6638399`.`User`(`UID`,`uname`,`user_type`,`email`,`password`) VALUES ({uid},'{username}','{signupType}','{email}','{encpass}');"
@@ -176,29 +175,6 @@ def get_order_detail(oid):
     return order
 
 
-# def get_order_detail(oid):
-#   with engine.connect() as conn:
-
-#     result = conn.execute(
-#         text(
-#             f"SELECT * FROM sql6638399.Order as O join sql6638399.Assigned_order_to as AO on AO.OID=O.OID join sql6638399.Staff as S on AO.SID=S.UID where O.OID={oid};"
-#         ))
-
-#     order = [r._asdict() for r in result]
-#     return order
-
-# def get_order_with_location_detail(oid):
-#   with engine.connect() as conn:
-
-#     result = conn.execute(
-#         text(
-#             f"SELECT * FROM sql6638399.Order as O left join sql6638399.Order_location_details as OD on O.OID=OD.OID left join sql6638399.Assigned_order_to as AO on AO.OID=O.OID where O.OID={oid};"
-#         ))
-
-#     order = [r._asdict() for r in result]
-#     return order
-
-
 def get_order_with_location_detail(oid):
   with engine.connect() as conn:
 
@@ -216,7 +192,6 @@ def get_order_page(oid, uid, loginType):
 
   order = get_order_detail(oid)
   print(f'orders: {order}')
-  # return json.dumps(order, default=str)
   if loginType == 'customer':
     page = 'customer_view_order_details.html'
   elif loginType == 'staff':
@@ -290,38 +265,12 @@ def get_all_staff_details():
     return staff_list
 
 
-# def get_all_staff_details():
-#   with engine.connect() as conn:
-#     result = conn.execute(
-#         text(
-#             "SELECT U.UID, U.uname, S.sname, S.role ,U.email FROM sql6638399.User as U join sql6638399.Staff as S on U.UID=S.UID ;"
-#         ))
-#     staff = []
-#     results = result.all()
-#     for row in results:
-#       staff.append(row._mapping)
-#     return staff
-
-
 @app.route('/api/getAllStaff', methods=['GET'])
 def get_all_satff():
 
   staff = get_all_staff_details()
   print(f'staff: {staff}')
   return json.dumps(staff, default=str)
-
-
-# def get_all_customer_details():
-#   with engine.connect() as conn:
-#     result = conn.execute(
-#         text(
-#             "SELECT U.UID, U.uname, concat(C.firstname, ' '  ,C.lastname) as fullname, U.email , C.phone_num FROM sql6638399.User as U join sql6638399.Customer as C on U.UID=C.UID ;"
-#         ))
-#     customer = []
-#     results = result.all()
-#     for row in results:
-#       customer.append(row._mapping)
-#     return customer
 
 
 def get_all_customer_details():
@@ -333,7 +282,6 @@ def get_all_customer_details():
     customer_list = []
     results = result.all()
     for row in results:
-      # Create a dictionary for each row
       customer_dict = {
           'fullname': row.fullname,
           'email': row.email,
@@ -353,10 +301,9 @@ def get_all_customer():
 
 def get_order_of_staff(sid):
   with engine.connect() as conn:
-    result = conn.execute(
-        text(
-            f"SELECT * FROM sql6638399.Assigned_order_to as AO join sql6638399.Order as O  on O.OID=AO.OID join sql6638399.Staff as S on AO.SID=S.UID where AO.SID={sid};"
-        ))
+    query = f"SELECT * FROM sql6638399.Assigned_order_to as AO join sql6638399.Order as O  on O.OID=AO.OID join sql6638399.Staff as S on AO.SID=S.UID where AO.SID={sid};"
+    print(f"query:{query}")
+    result = conn.execute(text(query))
     orders = []
     results = result.all()
     orders = [r._asdict() for r in results]
@@ -383,7 +330,6 @@ def assign_order():
   curr = datetime.datetime.now()
   curr_date_time = curr.strftime("%Y-%m-%d %H:%M:%S")
 
-  # add try catch
   with engine.connect() as conn:
     query1 = f"SELECT * FROM sql6638399.Assigned_order_to where OID = {order};"
     result = conn.execute(text(query1))
@@ -404,7 +350,7 @@ def assign_order():
 
 @app.route('/createOrder', methods=['POST'])
 def create_order():
-  # by customer or staff
+  # by customer
   data = request.json
   cid = data.get('uid')
   sender = data.get('sender')
@@ -424,10 +370,6 @@ def create_order():
   payment_status = 'Confirmed'
   order_status = 'To be confirmed'
 
-  # curr = datetime.datetime.now()
-  # curr_date_time = curr.strftime("%Y-%m-%d %H:%M:%S")
-
-  # add try catch
   with engine.connect() as conn:
     result = conn.execute(text(f"SELECT MAX(OID) FROM sql6638399.Order;"))
     OID = result.all()[0][0]
@@ -452,47 +394,6 @@ def create_order():
   return jsonify({
       'message': 'successfully created order',
   }), 200
-
-
-# @app.route('/createOrder', methods=['POST'])
-# def create_order():
-#   # by customer or staff
-#   data = request.json
-#   cid = data.get('uid')
-#   sender = data.get('sender')
-#   receiver = data.get('receiver')
-#   pickup_address_num = data.get('pickup_address_num')
-#   p_city = data.get('p_city')
-#   p_state = data.get('p_state')
-#   p_pin = data.get('p_pin')
-#   d_address_num = data.get('d_address_num')
-#   d_city = data.get('d_city')
-#   d_state = data.get('d_state')
-#   d_pin = data.get('d_pin')
-#   order_place_date = data.get('order_place_date')
-#   order_status = data.get('order_status')
-#   payment_status = data.get('payment_status')
-#   pickup_date = data.get('pickup_date')
-
-#   # curr = datetime.datetime.now()
-#   # curr_date_time = curr.strftime("%Y-%m-%d %H:%M:%S")
-
-#   # add try catch
-#   with engine.connect() as conn:
-#     query = f"INSERT INTO `sql6638399`.`Order`(`UID`,`sender`,`receiver`,`pickup_address_num`,`p_city`,`p_state`,`p_pin`,`d_address_num`,`d_city`,`d_state`,`d_pin`,`order_place_date`,`order_status`,`payment_status`,`pickup_date`) VALUES({cid},'{sender}','{receiver}','{pickup_address_num}','{p_city}','{p_state}',{p_pin},'{d_address_num}','{d_city}','{d_state}',{d_pin},'{order_place_date}','{order_status}','{payment_status}','{pickup_date}');"
-#     print(f"query: {query}")
-#     conn.execute(text(query))
-
-#     # if order_status == 'confirmed' and payment_status == 'confirmed':
-#     #   query2 = f"INSERT INTO `sql6638399`.`Order_location_details` (`OID`,`date_time`,`location`) VALUES({oid},'{order_place_date}','{p_city}');"
-#     #   print(f"query2: {query2}")
-#     #   conn.execute(text(query2))
-
-#     conn.commit()
-
-#   return jsonify({
-#       'message': 'successfully created order',
-#   }), 200
 
 
 @app.route('/updateOrder/<oid>', methods=['POST'])
@@ -542,7 +443,7 @@ def update_delivery_details(oid):
   print(f"order_status: {order_status}")
   curr = datetime.datetime.now()
   date_time = curr.strftime("%Y-%m-%d %H:%M:%S")
-  # add try catch
+
   with engine.connect() as conn:
     query = f"UPDATE `sql6638399`.`Order` SET "
     if order_status:
@@ -577,7 +478,7 @@ def cancel_order(oid):
   print("in cancel order")
   curr = datetime.datetime.now()
   date_time = curr.strftime("%Y-%m-%d %H:%M:%S")
-  # add try catch
+
   with engine.connect() as conn:
     query = f"UPDATE `sql6638399`.`Order` SET `order_status` = 'cancel',`payment_status` = 'cancel' WHERE `OID` = {oid};"
     print(f"query: {query}")

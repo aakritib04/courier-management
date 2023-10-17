@@ -85,7 +85,7 @@
             type: 'GET',
             async: false,
             success: function(response) {
-                // Handle the response from the server
+                
               console.log("Response:", response);
               console.log(JSON.stringify(response))
               orderData = JSON.parse(response)
@@ -106,7 +106,7 @@
 
             },
             error: function(xhr, textStatus, errorThrown) {
-                // Handle errors from the API
+               
                 console.error("Error:", errorThrown);
                 alert("failed. Please try again.");
             }

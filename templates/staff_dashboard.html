@@ -17,8 +17,7 @@
   <body>
     {% include "navbar.html" %}
     <h1>Welcome to the CMC Services</h1>
-    <p>Staff :: {{uid}}</p>
-    <p>loginType :: {{loginType}}</p>
+    <h3>Staff Dashboard</h3>
     <button id="createOrder" class="btn btn-success" onclick="callFlaskCreateOrderAPI()">Create Order</button>
     <h2>Orders and Status</h2>
     <table id="ordersTable" class="display" style="width:100%">
@@ -52,7 +51,7 @@
             type: 'GET',
             async: false,
             success: function(response) {
-                // Handle the response from the server
+                
               console.log("Response:", response);
               console.log(JSON.stringify(response))
               ordersData = JSON.parse(response)
@@ -61,7 +60,7 @@
 
             },
             error: function(xhr, textStatus, errorThrown) {
-                // Handle errors from the API
+                
                 console.error("Error:", errorThrown);
                 alert("Signup failed. Please try again.");
             }
@@ -91,7 +90,7 @@
         $('#ordersTable tbody').on('click', 'button#update_order', function() {
           var rowData = ordersTable.row($(this).closest('tr')).data();
             console.log(rowData)
-            var oid = rowData['OID']; // Get the value of the first column
+            var oid = rowData['OID']; 
             var loginType = "{{loginType}}"
             window.location.href ='/update_order_page/'+loginType+'/'+oid+'/'+uid
 
@@ -105,9 +104,8 @@
         $('#ordersTable tbody').on('click', 'button#delete_order', function() {
           var rowData = ordersTable.row($(this).closest('tr')).data();
             console.log(rowData)
-            var oid = rowData['OID']; // Get the value of the first column
+            var oid = rowData['OID']; 
             var loginType = "{{loginType}}"
-            // window.location.href ='/delete_order_page/'+loginType+'/'+oid+'/'+uid
           const userConfirmed = confirm("Are you sure you want to Cancel this Order?");
           if (userConfirmed) {
           $.ajax({
