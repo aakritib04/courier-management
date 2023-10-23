@@ -92,7 +92,8 @@
             console.log(rowData)
             var oid = rowData['OID']; 
             var loginType = "{{loginType}}"
-            window.location.href ='/update_order_page/'+loginType+'/'+oid+'/'+uid
+            // window.location.href ='/update_order_page/'+loginType+'/'+oid+'/'+uid
+          window.open('/update_order_page/'+loginType+'/'+oid+'/'+uid)
 
         });
       }
